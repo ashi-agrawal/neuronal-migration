@@ -58,18 +58,18 @@ class Option(Config):
     name = "DSB2018"
 
     # root dir of training and validation set
-    root_dir = '/home/liming/Documents/dataset/dataScienceBowl2018/combined'
+    root_dir = '/home/ubuntu/.kaggle/combined'
 
     # root dir of testing set
-    test_dir = '/home/liming/Documents/dataset/dataScienceBowl2018/testing_data'
+    test_dir = '/home/ubuntu/.kaggle/testing_data'
 
     # save segmenting results (prediction masks) to this folder
-    results_dir = '/home/liming/Documents/dataset/dataScienceBowl2018/results'
+    results_dir = '/home/ubuntu/.kaggle/results'
 
     num_workers = 1     	# number of threads for data loading
     shuffle = True      	# shuffle the data set
     batch_size = 16     		# GTX1060 3G Memory
-    epochs = 2			# number of epochs to train
+    epochs = 10			# number of epochs to train
     is_train = True     	# True for training, False for making prediction
     save_model = False   	# True for saving the model, False for not saving the model
 
@@ -129,6 +129,8 @@ class Utils(object):
         for n, id_ in tqdm(enumerate(train_ids)):
             path = os.path.join(self.stage1_train_src, id_)
             dest = os.path.join(self.stage1_train_dest, id_)
+            if not os.path.exists(dest):
+                os.makedirs(dest)
             img = Image.open(os.path.join(path, 'images', id_ + '.png')).convert("RGB")
             mask = self.assemble_masks(path)
             img.save(os.path.join(dest, 'image.png'))
@@ -147,7 +149,7 @@ class Utils(object):
             path = os.path.join(self.stage1_test_src, id_, 'images', id_+'.png')
             dest = os.path.join(self.stage1_test_dest, id_)
             if not os.path.exists(dest):
-                os.mkdir(dest)
+                os.makedirs(dest)
             img = Image.open(path).convert("RGB")
             img.save(os.path.join(dest, 'image.png'))
 
@@ -222,10 +224,10 @@ if __name__ == '__main__':
     """ Prepare training data and testing data
     read data and overlay masks and save to destination path
     """
-    stage1_train_src = '/home/liming/Documents/dataset/dataScienceBowl2018/stage1_train'
-    stage1_train_dest = '/home/liming/Documents/dataset/dataScienceBowl2018/combined'
-    stage1_test_src = '/home/liming/Documents/dataset/dataScienceBowl2018/stage1_test'
-    stage1_test_dest = '/home/liming/Documents/dataset/dataScienceBowl2018/testing_data'
+    stage1_train_src = '/home/ubuntu/.kaggle/stage1_train'
+    stage1_train_dest = '/home/ubuntu/.kaggle/combined'
+    stage1_test_src = '/home/ubuntu/.kaggle/stage1_test'
+    stage1_test_dest = '/home/ubuntu/.kaggle/testing_data'
 
     util = Utils(stage1_train_src, stage1_train_dest, stage1_test_src, stage1_test_dest)
     util.prepare_training_data()

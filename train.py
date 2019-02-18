@@ -30,7 +30,7 @@ def train(model, train_loader, opt, criterion, epoch):
             loss = criterion(output, target)
             loss.backward()
             optimizer.step()
-            avg_loss += loss.data[0]
+            avg_loss += loss.item()
             num_batches += 1
         avg_loss /= num_batches
         # avg_loss /= len(train_loader.dataset)
