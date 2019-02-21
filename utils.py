@@ -30,7 +30,7 @@ class Config():
 
     batch_size = 16
 
-    learning_rate = 1e-3
+    learning_rate = 1e-2
     learning_momentum = 0.9
     weight_decay = 1e-4
 
@@ -58,27 +58,27 @@ class Option(Config):
     name = "DSB2018"
 
     # root dir of training and validation set
-    root_dir = '/home/ubuntu/.kaggle/combined'
+    root_dir = '/Users/juliaschaepe/migration/combined'
 
     # root dir of testing set
-    test_dir = '/home/ubuntu/.kaggle/testing_data'
+    test_dir = '/Users/juliaschaepe/migration/testing_data'
 
     # save segmenting results (prediction masks) to this folder
-    results_dir = '/home/ubuntu/.kaggle/results'
+    results_dir = '/Users/juliaschaepe/migration/results'
 
     num_workers = 1     	# number of threads for data loading
     shuffle = True      	# shuffle the data set
     batch_size = 16     		# GTX1060 3G Memory
     epochs = 150			# number of epochs to train
-    is_train = True     	# True for training, False for making prediction
-    save_model = False   	# True for saving the model, False for not saving the model
+    is_train = False     	# True for training, False for making prediction
+    save_model = True   	# True for saving the model, False for not saving the model
 
     n_gpu = 1				# number of GPUs
 
-    learning_rate = 1e-3	# learning rage
+    learning_rate = 1e-1	# learning rage
     weight_decay = 1e-4		# weight decay
 
-    pin_memory = True   	# use pinned (page-locked) memory. when using CUDA, set to True
+    pin_memory = False  	# use pinned (page-locked) memory. when using CUDA, set to True
 
     is_cuda = torch.cuda.is_available()  	# True --> GPU
     num_gpus = torch.cuda.device_count()  	# number of GPUs
@@ -172,7 +172,8 @@ def compute_iou(predictions, img_ids, val_loader):
         iou = intersection/union
         ious.append(iou)
     df = pd.DataFrame({'img_id':img_ids,'iou':ious})
-    df.to_csv('IOU.csv', index=False)
+    print(df)
+    df.to_csv('IOU.csv', index=True)
 
 
 
@@ -224,10 +225,10 @@ if __name__ == '__main__':
     """ Prepare training data and testing data
     read data and overlay masks and save to destination path
     """
-    stage1_train_src = '/home/ubuntu/.kaggle/stage1_train'
-    stage1_train_dest = '/home/ubuntu/.kaggle/combined'
-    stage1_test_src = '/home/ubuntu/.kaggle/stage1_test'
-    stage1_test_dest = '/home/ubuntu/.kaggle/testing_data'
+    stage1_train_src = '/Users/juliaschaepe/migration/image-train'
+    stage1_train_dest = '/Users/juliaschaepe/migration/combined'
+    stage1_test_src = '/Users/juliaschaepe/migration/image-test'
+    stage1_test_dest = '/Users/juliaschaepe/migration/testing_data'
 
     util = Utils(stage1_train_src, stage1_train_dest, stage1_test_src, stage1_test_dest)
     util.prepare_training_data()
