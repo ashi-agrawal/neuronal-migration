@@ -173,7 +173,8 @@ def compute_iou(predictions, img_ids, val_loader):
         iou = intersection/union
         ious.append(iou)
     df = pd.DataFrame({'img_id':img_ids,'iou':ious})
-    df.to_csv('IOU.csv', index=False)
+    print(df)
+    df.to_csv('IOU.csv', index=True)
 
 
 
