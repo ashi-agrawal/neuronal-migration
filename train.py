@@ -15,6 +15,7 @@ from skimage import io
 from skimage.transform import resize
 import matplotlib.pyplot as plt
 
+
 def train(model, train_loader, opt, criterion, epoch):
     model.train()
     num_batches = 0
@@ -111,8 +112,9 @@ if __name__ == '__main__':
     model = UNet2(input_channels=3, nclasses=1)
     if opt.is_train:
         # split all data to train and validation, set split = True
-        train_loader, val_loader = get_train_valid_loader(opt.root_dir, batch_size=opt.batch_size,
-                                              split=True, shuffle=opt.shuffle,
+        # val_loader belongs below
+        train_loader = get_train_valid_loader(opt.root_dir, batch_size=opt.batch_size,
+                                              split=False, shuffle=opt.shuffle,
                                               num_workers=opt.num_workers,
                                               val_ratio=0.1, pin_memory=opt.pin_memory)
 
@@ -125,6 +127,14 @@ if __name__ == '__main__':
             model = nn.DataParallel(model)
         if opt.is_cuda:
             model = model.cuda()
+        param_counter = 0
+        for param in model.parameters():
+            param.requires_grad=False
+            param_counter += 1
+        for param in model.parameters():
+            param_counter -= 1
+            if param_counter == 0:
+                param.requires_grad=True
         optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
         criterion = nn.BCELoss().cuda()
         # start to run a training
@@ -141,11 +151,12 @@ if __name__ == '__main__':
         test_loader = get_test_loader(opt.test_dir, batch_size=opt.batch_size, shuffle=opt.shuffle,
                                       num_workers=opt.num_workers, pin_memory=opt.pin_memory)
         # load the model and run test
-        model.load_state_dict(torch.load(os.path.join(opt.checkpoint_dir, 'model-01.pt')))
+        model.load_state_dict(torch.load(os.path.join(opt.checkpoint_dir, 'model-01.pt'), map_location=lambda storage, loc: storage))
         if opt.n_gpu > 1:
             model = nn.DataParallel(model)
         if opt.is_cuda:
             model = model.cuda()
         predictions, img_ids = run_test(model, test_loader, opt)
+        compute_iou(predictions, img_ids, test_loader)
         # run length encoding and save as csv
         encode_and_save(predictions, img_ids)
