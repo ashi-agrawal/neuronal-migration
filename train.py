@@ -10,7 +10,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 from dataset import get_train_valid_loader, get_test_loader
 from model import UNet2
-from utils import Option, encode_and_save, compute_iou
+from utils import Option, encode_and_save, compute_iou, save_model_info
 from skimage import io
 from skimage.transform import resize
 import matplotlib.pyplot as plt
@@ -128,24 +128,28 @@ if __name__ == '__main__':
         if opt.is_cuda:
             model = model.cuda()
         param_counter = 0
+        param_retrain_number = 3
         for param in model.parameters():
             param.requires_grad=False
             param_counter += 1
         for param in model.parameters():
             param_counter -= 1
-            if param_counter == 0:
+            if param_counter <= param_retrain_number:
                 param.requires_grad=True
         optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
         criterion = nn.BCELoss().cuda()
         # start to run a training
         run_train(model, train_loader, opt, criterion)
+        # SAVE model
+        if opt.save_model:
+            model_name = 'model-01.pt'
+            torch.save(model.state_dict(), os.path.join(opt.checkpoint_dir, model_name))
+            save_model_info(opt, param_retrain_number, model_name)
         # make prediction on validation set
         predictions, img_ids = run_test(model, val_loader, opt)
         # compute IOU between prediction and ground truth masks
         compute_iou(predictions, img_ids, val_loader)
-        # SAVE model
-        if opt.save_model:
-            torch.save(model.state_dict(), os.path.join(opt.checkpoint_dir, 'model-01.pt'))
+       
     else:
         # load testing data for making predictions
         test_loader = get_test_loader(opt.test_dir, batch_size=opt.batch_size, shuffle=opt.shuffle,

@@ -70,8 +70,8 @@ class Option(Config):
     num_workers = 1     	# number of threads for data loading
     shuffle = True      	# shuffle the data set
     batch_size = 16     		# GTX1060 3G Memory
-    epochs = 10			# number of epochs to train
-    is_train = False     	# True for training, False for making prediction
+    epochs = 1			# number of epochs to train
+    is_train = True     	# True for training, False for making prediction
     save_model = True   	# True for saving the model, False for not saving the model
 
     n_gpu = 1				# number of GPUs
@@ -121,21 +121,24 @@ class Utils(object):
     def prepare_training_data(self):
         # get imageId
         train_ids = next(os.walk(self.stage1_train_src))[1]
-
+        print(train_ids)
         # read training data
         X_train = []
         Y_train = []
         print('reading training data starts...')
         sys.stdout.flush()
         for n, id_ in tqdm(enumerate(train_ids)):
-            path = os.path.join(self.stage1_train_src, id_)
-            dest = os.path.join(self.stage1_train_dest, id_)
-            if not os.path.exists(dest):
-                os.makedirs(dest)
-            img = Image.open(os.path.join(path, 'images', id_ + '.png')).convert("RGB")
-            mask = self.assemble_masks(path)
-            img.save(os.path.join(dest, 'image.png'))
-            Image.fromarray(mask).save(os.path.join(dest, 'mask.png'))
+            try:
+                path = os.path.join(self.stage1_train_src, id_)
+                dest = os.path.join(self.stage1_train_dest, id_)
+                if not os.path.exists(dest):
+                    os.makedirs(dest)
+                img = Image.open(os.path.join(path, 'images', id_ + '.png')).convert("RGB")
+                mask = self.assemble_masks(path)
+                img.save(os.path.join(dest, 'image.png'))
+                Image.fromarray(mask).save(os.path.join(dest, 'mask.png'))
+            except:
+                print('DS prob')
 
         print('reading training data done...')
 
@@ -147,12 +150,15 @@ class Utils(object):
         print('reading testing data starts...')
         sys.stdout.flush()
         for n, id_ in tqdm(enumerate(test_ids)):
-            path = os.path.join(self.stage1_test_src, id_, 'images', id_+'.png')
-            dest = os.path.join(self.stage1_test_dest, id_)
-            if not os.path.exists(dest):
-                os.makedirs(dest)
-            img = Image.open(path).convert("RGB")
-            img.save(os.path.join(dest, 'image.png'))
+            try:
+                path = os.path.join(self.stage1_test_src, id_, 'images', id_+'.png')
+                dest = os.path.join(self.stage1_test_dest, id_)
+                if not os.path.exists(dest):
+                    os.makedirs(dest)
+                img = Image.open(path).convert("RGB")
+                img.save(os.path.join(dest, 'image.png'))
+            except:
+                print('DS prob')
 
         print('reading testing data done...')
 
@@ -173,9 +179,15 @@ def compute_iou(predictions, img_ids, val_loader):
         iou = intersection/union
         ious.append(iou)
     df = pd.DataFrame({'img_id':img_ids,'iou':ious})
-    print(df)
-    df.to_csv('IOU.csv', index=True)
-
+    df.to_csv('IOU.csv', index=False)
+    
+def save_model_info(opt, param_retrain_number, model_name):
+    """
+    saves the hyperparameters used for a given model
+    """
+    df = pd.DataFrame({'model_name':[model_name], ' learning_rate':[opt.learning_rate],' epochs':[opt.epochs],' weight_decay':[opt.weight_decay],' batch_size':[opt.batch_size],' param_retrain_number':[param_retrain_number]})
+    df.to_csv('model_info.csv', index=False)
+    
 
 
 # Run-length encoding stolen from https://www.kaggle.com/rakhlin/fast-run-length-encoding-python
