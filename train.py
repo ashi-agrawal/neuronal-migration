@@ -134,7 +134,7 @@ if __name__ == '__main__':
             param_counter += 1
         for param in model.parameters():
             param_counter -= 1
-            if param_counter <= param_retrain_number:
+            if param_counter <= (param_retrain_number*4-1):
                 param.requires_grad=True
         optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
         criterion = nn.BCELoss().cuda()
@@ -142,7 +142,7 @@ if __name__ == '__main__':
         run_train(model, train_loader, opt, criterion)
         # SAVE model
         if opt.save_model:
-            model_name = 'model-01.pt'
+            model_name = 'model-11.pt'
             torch.save(model.state_dict(), os.path.join(opt.checkpoint_dir, model_name))
             save_model_info(opt, param_retrain_number, model_name)
         # make prediction on validation set
@@ -161,6 +161,6 @@ if __name__ == '__main__':
         if opt.is_cuda:
             model = model.cuda()
         predictions, img_ids = run_test(model, test_loader, opt)
-        compute_iou(predictions, img_ids, test_loader)
         # run length encoding and save as csv
         encode_and_save(predictions, img_ids)
+        compute_iou(predictions, img_ids, test_loader)
