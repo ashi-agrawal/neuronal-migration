@@ -16,6 +16,8 @@ import pandas as pd
 import matplotlib.pylab as plt
 import pdb
 
+FILE_PREFIX = #YOUR FILE PATH HERE
+
 
 # Base Configuration class
 # Don't use this class directly. Instead, sub-class it and override
@@ -59,13 +61,13 @@ class Option(Config):
     name = "DSB2018"
 
     # root dir of training and validation set
-    root_dir = '/Users/juliaschaepe/migration/combined'
+    root_dir = FILE_PREFIX + 'combined'
 
     # root dir of testing set
-    test_dir = '/Users/juliaschaepe/migration/testing_data'
+    test_dir = FILE_PREFIX + 'testing_data'
 
     # save segmenting results (prediction masks) to this folder
-    results_dir = '/Users/juliaschaepe/migration/results'
+    results_dir = FILE_PREFIX + 'results'
 
     num_workers = 1     	# number of threads for data loading
     shuffle = True      	# shuffle the data set
@@ -121,7 +123,6 @@ class Utils(object):
     def prepare_training_data(self):
         # get imageId
         train_ids = next(os.walk(self.stage1_train_src))[1]
-        print(train_ids)
         # read training data
         X_train = []
         Y_train = []
@@ -238,10 +239,11 @@ if __name__ == '__main__':
     """ Prepare training data and testing data
     read data and overlay masks and save to destination path
     """
-    stage1_train_src = '/Users/juliaschaepe/migration/image-train'
-    stage1_train_dest = '/Users/juliaschaepe/migration/combined'
-    stage1_test_src = '/Users/juliaschaepe/migration/image-test'
-    stage1_test_dest = '/Users/juliaschaepe/migration/testing_data'
+
+    stage1_train_src = os.path.join(FILE_PREFIX, 'stage1_train')
+    stage1_train_dest = os.path.join(FILE_PREFIX, 'combined')
+    stage1_test_src = os.path.join(FILE_PREFIX, 'stage1_test')
+    stage1_test_dest = os.path.join(FILE_PREFIX, 'testing_data')
 
     util = Utils(stage1_train_src, stage1_train_dest, stage1_test_src, stage1_test_dest)
     util.prepare_training_data()

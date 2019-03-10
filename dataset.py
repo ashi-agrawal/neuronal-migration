@@ -11,12 +11,42 @@ from torchvision import transforms, utils
 from skimage import io, transform
 from utils import Option
 import matplotlib.pylab as plt
+from scipy.ndimage.interpolation import map_coordinates
+from scipy.ndimage.filters import gaussian_filter
 from sklearn.model_selection import train_test_split
 
 
 """Transforms:
 Data augmentation
 """
+class Elastic_Deformation(object):
+    """
+    See: https://gist.github.com/fmder/e28813c1e8721830ff9c
+    """
+    def __init__ (self, alpha, sigma, random_state = None):
+        self.alpha = alpha
+        self.sigma = sigma
+        self.random_state = random_state
+
+    def __call__(self, sample):
+        image, mask, img_id, height, width = sample['image'], sample['mask'], sample['img_id'], sample['height'],sample['width']
+        if self.random_state is None:
+            self.random_state = np.random.RandomState(None)
+
+        shape = image.shape
+        dx = gaussian_filter((self.random_state.rand(*shape) * 2 - 1), self.sigma, mode="constant", cval=0) * self.alpha
+        dy = gaussian_filter((self.random_state.rand(*shape) * 2 - 1), self.sigma, mode="constant", cval=0) * self.alpha
+
+        x, y = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]))
+        x = np.stack((x,)*3, axis=-1)
+        y = np.stack((y,)*3, axis=-1)
+        indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1))
+        image = np.dot(image[...,:3], [0.299, 0.587, 0.114])
+        mask = np.reshape(mask, (mask.shape[0], mask.shape[1]))
+        image = map_coordinates(image, indices, order=1).reshape(shape)
+        mask = map_coordinates(mask, indices, order=1).reshape(shape)
+        return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}
+
 class Rescale(object):
     """Rescale the image in a sample to a given size.
 
@@ -144,7 +174,7 @@ def show_batch(sample_batched):
 
 # Load Data Science Bowl 2018 training dataset
 class DSB2018Dataset(Dataset):
-    def __init__(self, root_dir, img_id, train=True, transform=None):
+    def __init__(self, root_dir=None, img_id = [], train=True, transform=None, samples = []):
         """
         Args:
         :param root_dir (string): Directory with all the images
@@ -158,11 +188,17 @@ class DSB2018Dataset(Dataset):
         self.train = train
         self.transform = transform
         self.opt = Option()
+        self.samples = samples
+        for idx in range(len(self.img_id)):
+            self.samples.append(self.get_sample(idx))
 
     def __len__(self):
-        return len(self.img_id)
+         return len(self.samples)
 
     def __getitem__(self, idx):
+        return self.samples[idx]
+
+    def get_sample(self, idx):
         if self.train:
             img_dir = os.path.join(self.root_dir, self.img_id[idx], 'image.png')
             mask_dir = os.path.join(self.root_dir, self.img_id[idx], 'mask.png')
@@ -181,6 +217,10 @@ class DSB2018Dataset(Dataset):
             sample = self.transform(sample)
 
         return sample
+
+    def __add__(self, other):
+        added_samples = np.concatenate([self.samples, other.samples])
+        return DSB2018Dataset(samples=added_samples)
 
 def get_train_valid_loader(root_dir, batch_size=16, split=True,
                            shuffle=False, num_workers=4, val_ratio=0.1, pin_memory=False):
@@ -236,7 +276,20 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                                  Rescale(256),
                                                  ToTensor()
                                              ]))
-        dataloader = DataLoader(transformed_dataset, batch_size=batch_size,
+        elastic_deformation_dataset = DSB2018Dataset(root_dir=root_dir,
+                                             img_id=img_id,
+                                             train=True,
+                                             transform=transforms.Compose([
+                                                 RandomCrop(256),
+                                                 Rescale(256),
+                                                 Elastic_Deformation(4, 34),
+                                                 ToTensor()
+                                             ]))
+        dataset = transformed_dataset + elastic_deformation_dataset
+        print(transformed_dataset)
+        print(elastic_deformation_dataset)
+        print(dataset)
+        dataloader = DataLoader(dataset, batch_size=batch_size,
                                 shuffle=shuffle, num_workers=num_workers, pin_memory=pin_memory)
         return dataloader
 
