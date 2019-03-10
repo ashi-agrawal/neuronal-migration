@@ -117,7 +117,6 @@ if __name__ == '__main__':
                                               split=False, shuffle=opt.shuffle,
                                               num_workers=opt.num_workers,
                                               val_ratio=0.1, pin_memory=opt.pin_memory)
-        print(train_loader)
         # load all data for training
         # train_loader = get_train_valid_loader(opt.root_dir, batch_size=opt.batch_size,
         #                                       split=False, shuffle=opt.shuffle,

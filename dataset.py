@@ -286,9 +286,6 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                                  ToTensor()
                                              ]))
         dataset = transformed_dataset + elastic_deformation_dataset
-        print(transformed_dataset)
-        print(elastic_deformation_dataset)
-        print(dataset)
         dataloader = DataLoader(dataset, batch_size=batch_size,
                                 shuffle=shuffle, num_workers=num_workers, pin_memory=pin_memory)
         return dataloader
