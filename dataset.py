@@ -11,6 +11,7 @@ from torchvision import transforms, utils
 from skimage import io, transform
 from utils import Option
 import matplotlib.pylab as plt
+import random
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 from sklearn.model_selection import train_test_split
@@ -42,6 +43,22 @@ class Elastic_Deformation(object):
         indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1)), np.reshape(z, (-1, 1))
         image = map_coordinates(image, indices, order=1).reshape(shape)
         mask = map_coordinates(mask, indices, order=1).reshape(shape)
+        return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}
+
+class Rotate(object):
+    def __call__(self, sample):
+        image, mask, img_id, height, width = sample['image'], sample['mask'], sample['img_id'], sample['height'],sample['width']
+        rand_choice = random.randint(1,3)
+        for i in range(rand_choice):
+            image = np.rot90(image)
+            mask = np.rot90(image)
+        return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}
+
+class Flip(object):
+    def __call__(self, sample):
+        image, mask, img_id, height, width = sample['image'], sample['mask'], sample['img_id'], sample['height'],sample['width']
+        image = np.flip(image)
+        mask = np.flip(mask)
         return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}
 
 class Rescale(object):
@@ -123,7 +140,6 @@ class RandomCrop(object):
 
         mask = mask[top: top + new_h,
                 left: left + new_w]
-
         return {'image': image, 'mask': mask, 'img_id':img_id, 'height':height, 'width':width}
 
 
@@ -270,7 +286,6 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                              train=True,
                                              transform=transforms.Compose([
                                                  RandomCrop(256),
-                                                 Rescale(256),
                                                  ToTensor()
                                              ]))
         elastic_deformation_dataset = DSB2018Dataset(root_dir=root_dir,
@@ -278,11 +293,26 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                              train=True,
                                              transform=transforms.Compose([
                                                  RandomCrop(256),
-                                                 Rescale(256),
                                                  Elastic_Deformation(4, 34),
                                                  ToTensor()
                                              ]))
-        dataset = transformed_dataset + elastic_deformation_dataset
+        flip_dataset = DSB2018Dataset(root_dir=root_dir,
+                                             img_id=img_id,
+                                             train=True,
+                                             transform=transforms.Compose([
+                                                 RandomCrop(256),
+                                                 Flip(),
+                                                 ToTensor()
+                                             ]))
+        rotate_dataset = DSB2018Dataset(root_dir=root_dir,
+                                             img_id=img_id,
+                                             train=True,
+                                             transform=transforms.Compose([
+                                                 RandomCrop(256),
+                                                 Rotate(),
+                                                 ToTensor()
+                                             ]))
+        dataset = transformed_dataset + elastic_deformation_dataset + flip_dataset + rotate_dataset
         dataloader = DataLoader(dataset, batch_size=batch_size,
                                 shuffle=shuffle, num_workers=num_workers, pin_memory=pin_memory)
         return dataloader
