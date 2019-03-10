@@ -21,7 +21,8 @@ Data augmentation
 """
 class Elastic_Deformation(object):
     """
-    See: https://gist.github.com/fmder/e28813c1e8721830ff9c
+    See: https://gist.github.com/fmder/e28813c1e8721830ff9c for original grey-scale deformation
+    See: https://gist.github.com/erniejunior/601cdf56d2b424757de5 for RGB deformation
     """
     def __init__ (self, alpha, sigma, random_state = None):
         self.alpha = alpha
@@ -37,12 +38,8 @@ class Elastic_Deformation(object):
         dx = gaussian_filter((self.random_state.rand(*shape) * 2 - 1), self.sigma, mode="constant", cval=0) * self.alpha
         dy = gaussian_filter((self.random_state.rand(*shape) * 2 - 1), self.sigma, mode="constant", cval=0) * self.alpha
 
-        x, y = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]))
-        x = np.stack((x,)*3, axis=-1)
-        y = np.stack((y,)*3, axis=-1)
-        indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1))
-        image = np.dot(image[...,:3], [0.299, 0.587, 0.114])
-        mask = np.reshape(mask, (mask.shape[0], mask.shape[1]))
+        x, y, z = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]), np.arange(shape[2]))
+        indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1)), np.reshape(z, (-1, 1))
         image = map_coordinates(image, indices, order=1).reshape(shape)
         mask = map_coordinates(mask, indices, order=1).reshape(shape)
         return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}

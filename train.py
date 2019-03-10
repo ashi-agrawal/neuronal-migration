@@ -122,6 +122,7 @@ if __name__ == '__main__':
         #                                       split=False, shuffle=opt.shuffle,
         #                                       num_workers=opt.num_workers,
         #                                       val_ratio=0.1, pin_memory=opt.pin_memory)
+        model.load_state_dict(torch.load(os.path.join(opt.checkpoint_dir, 'model-01.pt'), map_location=lambda storage, loc: storage))
         if opt.n_gpu > 1:
             model = nn.DataParallel(model)
         if opt.is_cuda:
@@ -145,9 +146,9 @@ if __name__ == '__main__':
             torch.save(model.state_dict(), os.path.join(opt.checkpoint_dir, model_name))
             save_model_info(opt, param_retrain_number, model_name)
         # make prediction on validation set
-        predictions, img_ids = run_test(model, val_loader, opt)
+        # predictions, img_ids = run_test(model, val_loader, opt)
         # compute IOU between prediction and ground truth masks
-        compute_iou(predictions, img_ids, val_loader)
+        # compute_iou(predictions, img_ids, val_loader)
        
     else:
         # load testing data for making predictions
