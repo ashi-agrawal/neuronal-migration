@@ -97,8 +97,8 @@ class Rescale(object):
 
             # resize the image,
             # preserve_range means not normalize the image when resize
-            img = transform.resize(image, (new_h, new_w), preserve_range=True, mode='constant')
-            mask = transform.resize(mask, (new_h, new_w), preserve_range=True, mode='constant')
+            img = transform.resize(image, (new_h, new_w), preserve_range=False, mode='constant')
+            mask = transform.resize(mask, (new_h, new_w), preserve_range=False, mode='constant')
             return {'image': img, 'mask': mask, 'img_id': img_id, 'height':height, 'width':width}
         else:
             image, img_id, height,width = sample['image'], sample['img_id'], sample['height'],sample['width']
@@ -111,7 +111,7 @@ class Rescale(object):
 
             # resize the image,
             # preserve_range means not normalize the image when resize
-            img = transform.resize(image, (new_h, new_w), preserve_range=True, mode='constant')
+            img = transform.resize(image, (new_h, new_w), preserve_range=False, mode='constant')
             return {'image': img, 'height': height,'width':width, 'img_id':img_id}
 
 class RandomCrop(object):
@@ -295,6 +295,7 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                              train=True,
                                              transform=transforms.Compose([
                                                  RandomCrop(256),
+                                                 Rescale(256),
                                                  ToTensor()
                                              ]))
         elastic_deformation_dataset = DSB2018Dataset(root_dir=root_dir,
@@ -302,6 +303,7 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                              train=True,
                                              transform=transforms.Compose([
                                                  RandomCrop(256),
+                                                 Rescale(256),
                                                  Elastic_Deformation(4, 34),
                                                  ToTensor()
                                              ]))
@@ -310,6 +312,7 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                              train=True,
                                              transform=transforms.Compose([
                                                  RandomCrop(256),
+                                                 Rescale(256),
                                                  Flip(),
                                                  ToTensor()
                                              ]))
@@ -318,10 +321,11 @@ def get_train_valid_loader(root_dir, batch_size=16, split=True,
                                              train=True,
                                              transform=transforms.Compose([
                                                  RandomCrop(256),
+                                                 Rescale(256),
                                                  Rotate(),
                                                  ToTensor()
                                              ]))
-        dataset = transformed_dataset + elastic_deformation_dataset + flip_dataset + rotate_dataset
+        dataset = transformed_dataset + rotate_dataset + flip_dataset + elastic_deformation_dataset
         dataloader = DataLoader(dataset, batch_size=batch_size,
                                 shuffle=shuffle, num_workers=num_workers, pin_memory=pin_memory)
         return dataloader

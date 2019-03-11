@@ -16,7 +16,7 @@ import pandas as pd
 import matplotlib.pylab as plt
 import pdb
 
-FILE_PREFIX = #YOUR FILE PATH HERE
+FILE_PREFIX = '/Users/juliaschaepe/migration/'
 
 
 # Base Configuration class
@@ -31,7 +31,7 @@ class Config():
 
     img_channel = 3
 
-    batch_size = 16
+    batch_size = 8
 
     learning_rate = 1e-2
     learning_momentum = 0.9
@@ -72,7 +72,7 @@ class Option(Config):
     num_workers = 1     	# number of threads for data loading
     shuffle = True      	# shuffle the data set
     batch_size = 16     		# GTX1060 3G Memory
-    epochs = 150			# number of epochs to train
+    epochs = 10			# number of epochs to train
     is_train = True     	# True for training, False for making prediction
     save_model = True   	# True for saving the model, False for not saving the model
 
@@ -240,9 +240,9 @@ if __name__ == '__main__':
     read data and overlay masks and save to destination path
     """
 
-    stage1_train_src = os.path.join(FILE_PREFIX, 'train-data')
+    stage1_train_src = os.path.join(FILE_PREFIX, 'image-train_complete')
     stage1_train_dest = os.path.join(FILE_PREFIX, 'combined')
-    stage1_test_src = os.path.join(FILE_PREFIX, 'validation-data')
+    stage1_test_src = os.path.join(FILE_PREFIX, 'image-validation')
     stage1_test_dest = os.path.join(FILE_PREFIX, 'testing_data')
 
     util = Utils(stage1_train_src, stage1_train_dest, stage1_test_src, stage1_test_dest)
