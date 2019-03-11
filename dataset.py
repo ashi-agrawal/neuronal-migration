@@ -43,6 +43,9 @@ class Elastic_Deformation(object):
         indices = np.reshape(y+dy, (-1, 1)), np.reshape(x+dx, (-1, 1)), np.reshape(z, (-1, 1))
         image = map_coordinates(image, indices, order=1).reshape(shape)
         mask = map_coordinates(mask, indices, order=1).reshape(shape)
+        if mask.shape[2] == 3:
+            mask = np.dot(mask[...,:3], [0.299, 0.587, 0.114])
+            mask = np.reshape(mask, (mask.shape[0], mask.shape[1], 1))
         return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}
 
 class Rotate(object):
@@ -52,6 +55,9 @@ class Rotate(object):
         for i in range(rand_choice):
             image = np.rot90(image)
             mask = np.rot90(image)
+        if mask.shape[2] == 3:
+            mask = np.dot(mask[...,:3], [0.299, 0.587, 0.114])
+            mask = np.reshape(mask, (mask.shape[0], mask.shape[1], 1))
         return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}
 
 class Flip(object):
@@ -59,6 +65,9 @@ class Flip(object):
         image, mask, img_id, height, width = sample['image'], sample['mask'], sample['img_id'], sample['height'],sample['width']
         image = np.flip(image)
         mask = np.flip(mask)
+        if mask.shape[2] == 3:
+            mask = np.dot(mask[...,:3], [0.299, 0.587, 0.114])
+            mask = np.reshape(mask, (mask.shape[0], mask.shape[1], 1))
         return {'image': image, 'mask':mask, 'img_id':img_id, 'height':height, 'width':width}
 
 class Rescale(object):
